@@ -1,0 +1,7 @@
+・websocket on unity (or sokcet on unity)
+
+・interactivity of rigid bodies (billiard)
+
+・Application data on ASP.NET CORE (or DB)
+
+(・Useage of postgreSAL on ASP.NET Core)
