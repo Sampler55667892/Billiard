@@ -1,0 +1,8 @@
+links
+
+　[1] Unity User Manual (2018.2)
+　　https://docs.unity3d.com/Manual/index.html
+　[2] Unity向け .gitignoreの設定について
+　　https://qiita.com/nariya/items/97afba6b7b448920cdf0
+　　https://github.com/github/gitignore/blob/master/Unity.gitignore
+　　https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
