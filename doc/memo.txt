@@ -6,3 +6,22 @@ links
 　　https://qiita.com/nariya/items/97afba6b7b448920cdf0
 　　https://github.com/github/gitignore/blob/master/Unity.gitignore
 　　https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
+　[3] エイトボール
+　　https://www.billiards-cues.jp/rule/eight/
+
+Unity
+
+　キューによるボール突き
+　　> 加える力の大きさの調節
+　　> 加える力の方向の調節
+　ステート
+　　> 方向の決定
+　　> 力の大きさの決定
+　1回のショットの終了判定？
+　　> 各ボールの速度が 0 になること
+　　　> 各ボールに一定速度以下になったら停止するスクリプトを張る
+　　　> タイミングを gameController が知るには？
+　　　　> 各ボールからイベントを受ける
+　　　　> gameController がポーリングループを用意して、全ボールの速度を評価する
+　　　　　> 全ボールの速さが一定時間間隔内で一定値以下であり続けたら (反射による停止除外) 全て停止させる
+
