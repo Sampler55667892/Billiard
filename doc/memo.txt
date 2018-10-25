@@ -6,8 +6,17 @@ links
 　　https://qiita.com/nariya/items/97afba6b7b448920cdf0
 　　https://github.com/github/gitignore/blob/master/Unity.gitignore
 　　https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
-　[3] エイトボール
+　[3] Unity Editor の日本語化
+　　http://tsubakit1.hateblo.jp/entry/2018/05/07/222059
+　　http://editor-localization.s3-website-ap-northeast-1.amazonaws.com/2018.1/ja.po
+　[4] エイトボール
 　　https://www.billiards-cues.jp/rule/eight/
+　[5] UnityでWebSocketを使ってみたい
+　　http://mslgt.hatenablog.com/entry/2017/05/11/073758
+　[6] UnityでWebSocketを使用する
+　　https://qiita.com/oishihiroaki/items/bb2977c72052f5dd5bd9
+　[7] websocket-sharp
+　　https://github.com/sta/websocket-sharp
 
 Unity
 
@@ -25,3 +34,21 @@ Unity
 　　　　> gameController がポーリングループを用意して、全ボールの速度を評価する
 　　　　　> 全ボールの速さが一定時間間隔内で一定値以下であり続けたら (反射による停止除外) 全て停止させる
 
+環境周り
+
+　・UnityEditor の日本語化 [1]
+　　前提1：Unity2018.1 以降を利用
+　　前提2：Unity を既にインストール済 (未インストールの場合は Unityu Hub からインストールする際に言語設定可)
+　　手順：
+　　　1) URL [2] から日本語用の言語ファイル (ja.po) をダウンロードする
+　　　　※poファイルの中身は逐次翻訳リスト > 追加・編集可能
+　　　2) C:\Program Files\Unity\Editor\Data\Localization に ja.po を配置する
+　　　　※Windows と Mac とでパスが異なる
+　　　3) Unity Editor を再起動
+　　　4) Edit/Preferences から言語を選択
+
+　・C#スクリプトのランタイムの .NET Framework のバージョン変更
+　　手順：
+　　　1) File->Build Settings->Player Settings->Other Settings->Scripting Runtime Version を
+　　　　「.NET 3.5」 から 「.NET 4.x」 に変更
+　　　　※変更を有効にするには Unity Editor の再起動が必要

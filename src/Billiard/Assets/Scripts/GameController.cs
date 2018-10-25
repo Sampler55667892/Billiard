@@ -1,16 +1,28 @@
 ﻿using UnityEngine;
 using Assets.Scripts;
+using System.Collections.Generic;
+using WebSocketSharp;
 
 public class GameController : MonoBehaviour, INotifyStopping {
 
+    public GameObject ballsGameObject;
+
     const int mouseLeftButtonId = 0;
     const int mouseRightButtonId = 1;
-    const float forceFactor = 2000.0f;
+    const float forceFactor = 10000.0f; // 調整
     const float decisionRotationDeg = 0.5f;
     const string mainBallTag = "MainBall";
+    // 各ボールの停止チェック用
+    const int periodFramesBallStopCheck = 120;
+    const float nearlyStoppedSpeed = 0.3f;
 
     GameControllerState state;
     GameObject selectedBall;
+    bool shots;
+    List<GameObject> bufferBalls;
+    int countFramesBallStopped;
+
+    WebSocket ws_socket;
 
     UnityEngine.UI.Slider UISlider
     {
@@ -41,22 +53,34 @@ public class GameController : MonoBehaviour, INotifyStopping {
 
     void Initialize()
     {
+        shots = false;
+        bufferBalls = new List<GameObject>();
+        countFramesBallStopped = 0;
+
         // WebSocket で Server に接続
         if (!ConnectToServer())
             state.Abort();
     }
 
-    // TODO: Search sample and Implements
     bool ConnectToServer()
     {
-        //System.Net.WebSockets.WebSocket
-        //var socketInfo = new System.Net.Sockets.SocketInformation();
-        //var addressFamily = new System.Net.Sockets.AddressFamily();
-        //System.Net.Sockets.Socket s = new System.Net.Sockets.Socket(;
-        // Sample?
-        //var listener = new System.Net.Sockets.TcpListener(new System.Net.IPAddress(new byte[] { 127, 0, 0, 1 }), 8080);
-        //listener.Start()
-        //System.Net.Sockets.TcpClient
+        ws_socket = new WebSocket("ws://127.0.0.1:8080/ws");
+        // ハンドラ登録
+        ws_socket.OnOpen += (sender, e) => {
+            Debug.Log("ws.OnOpen()");
+        };
+        ws_socket.OnMessage += (sender, e) => {
+            Debug.Log($"ws.OnMessage(): {e.Data}");
+        };
+        ws_socket.OnClose += (sender, e) => {
+            Debug.Log("ws.OnClose()");
+        };
+        //Debug.Log("Pre ws.Connect()");
+        ws_socket.Connect();
+        //Debug.Log("Post ws.Connect()");
+        //ws_socket.Send("_TEST_ ws");
+
+        //ws_socket.Close();
 
         return true;
     }
@@ -72,6 +96,16 @@ public class GameController : MonoBehaviour, INotifyStopping {
             return;
         if (ProcessKeyEvent())
             return;
+
+        if (CheckAllBallStopped()) {
+            // サーバにショット後に停止したボール位置を送信
+            if (ws_socket != null) {
+                ws_socket.Send("ball positions...");
+            }
+
+            state.ChangeState();
+            //Debug.Log($"state.IsWatingTurn: {state.IsWatingTurn}");
+        }
 	}
 
     void UpdateUIText()
@@ -173,6 +207,53 @@ public class GameController : MonoBehaviour, INotifyStopping {
         return false;
     }
 
+    // 各ボールが一定フレームの間、一定速度以下になったかどうかチェック
+    bool CheckAllBallStopped()
+    {
+        if (!state.IsDecidingShotPower)
+            return false;
+        if (!shots)
+            return false;
+
+        bufferBalls.Clear();
+        for (var i = 0; i < ballsGameObject.transform.childCount; ++i)
+            bufferBalls.Add(ballsGameObject.transform.GetChild(i).gameObject);
+
+        if (bufferBalls.Count == 0)
+            return false;
+
+        var allBallsAreNearlyStopped = true;
+        for (var i = 0; i < bufferBalls.Count; ++i) {
+            var rigidBody = bufferBalls[i].GetComponent<Rigidbody>();
+            // ポケットしたボールは落下して速度が 0 にならないため除外
+            if (bufferBalls[i].transform.position.y < 0f)
+                continue;
+            if (nearlyStoppedSpeed < rigidBody.velocity.magnitude) {
+                allBallsAreNearlyStopped = false;
+                break;
+            }
+        }
+        if (!allBallsAreNearlyStopped)
+            return false;
+
+        ++countFramesBallStopped;
+        //Debug.Log($"#3: countFramesBallStopped: {countFramesBallStopped}");
+        if (periodFramesBallStopCheck <= countFramesBallStopped) {
+            //Debug.Log("#4");
+
+            countFramesBallStopped = 0;
+            // 全ボールを完全に停止
+            for (var i = 0; i < bufferBalls.Count; ++i) {
+                var rigidBody = bufferBalls[i].GetComponent<Rigidbody>();
+                rigidBody.velocity = Vector3.zero;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
     void ShotBall()
     {
         System.Diagnostics.Debug.Assert(selectedBall != null);
@@ -219,10 +300,10 @@ public class GameController : MonoBehaviour, INotifyStopping {
         Debug.Log("OnShotButtonClicked()");
 
         if (state.IsDecidingShotPower) {
-            state.ChangeState();
+            //state.ChangeState();
+            shots = true;
             ShotBall();
 
-            // TODO: StartCoroutine() でポーリングして全ボールの停止判定
             // TODO: 全ボールが停止した > Server に HTTP で移動後のボール座標とポケットしているかどうかを送信
             // > サーバからの Broadcast 待ち状態 (Wait turn) に状態遷移
             // 全ボールの速さが一定時間間隔内で一定値以下であり続けたら (反射による停止除外) 全て停止させる

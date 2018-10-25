@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+<p>
+    <div>
+        <center>
+            <h1>"ビリヤード" の論理設計</h1>
+        </center>
+        <div style="float:right;">
+            作成日: 2018/10/21 (日) P.M.<br>
+            更新日: 2018/10/24 (水) P.M.<br>
+            筆者: 小寺広志
+        </div>
+        <div>
+            目次<br>
+            　#0 システムイメージ<br>
+            　#1 利用ケース<br>
+            　#2 状態遷移<br>
+            　#3 シーケンス図<br>
+            　#4 クラス図<br>
+            　#5 開発環境<br>
+            　#6 実装のアーキテクチャ
+        </div>
+        <br>
+    </div>
+    <div>
+        <h2>#0 システムイメージ</h2>
+        <center>
+            <!-- (width, height) = (1154, 431) ; height = width * 0.373 -->
+            <img src="figures_ja/fig1a_system_image_ja.jpg" width="900" height="336"><br>
+            図0　システムイメージ
+        </center>
+        <br>
+        <br>
+        <h2>#1 利用ケース</h2>
+            <div style="margin-left:50px;">
+                <table style >
+                    <thead>
+                        <th>番号</th><th>クライアント/サーバ</th><th>内容</th>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>UC1</td><td>クライアント</td><td>ビリヤードの板の表示。</td>
+                        </tr>
+                        <tr>
+                            <td>UC2</td><td>クライアント</td><td>ビリヤードのボールの表示。</td>
+                        </tr>
+                        <tr>
+                            <td>UC3</td><td>クライアント</td><td>ビリヤードのボールのショット。</td>
+                        </tr>
+                        <tr>
+                            <td>UC4</td><td>クライアント</td><td>カメラの移動。</td>
+                        </tr>
+                        <tr>
+                            <td>UC5</td><td>クライアント</td><td>ぶつかったボール間の相互作用を計算 (物理と剛体)。</td>
+                        </tr>
+                        <tr>
+                            <td>UC6</td><td>クライアント</td><td>ショット位置の設定。</td>
+                        </tr>
+                        <tr>
+                            <td>UC7</td><td>クライアント</td><td>ボールの次の位置の送信 (HTTP POST (body: json))。</td>
+                        </tr>
+                        <tr>
+                            <td>UC8</td><td>クライアント</td><td>ゲーム終了の情報の送信 ("ボール9の落下" or "打つボールがない")。</td>
+                        </tr>
+                        <tr>
+                            <td>UC9</td><td>クライアント</td><td>ボールの次の位置の受信 (Webソケット)。</td>
+                        </tr>
+                        <tr>
+                            <td>UC10</td><td>クライアント</td><td>俺のターンかそうでないかの受信 (Webソケット)。</td>
+                        </tr>
+                        <tr>
+                            <td>US1</td><td>サーバ</td><td>ボールの次の位置の受信 (HTTP POST (body: json))。</td>
+                        </tr>
+                        <tr>
+                            <td>US2</td><td>サーバ</td><td>各クライアントへのボールの次の位置の送信 (Webソケット)。</td>
+                        </tr>
+                        <tr>
+                            <td>US3</td><td>サーバ</td><td>各クライアントへのゲーム終了の情報の送信 (Webソケット)。</td>
+                        </tr>
+                        <tr>
+                            <td>UC4</td><td>サーバ</td><td>各クライアントにターン情報 (アクティブかそうでないか) を送信 (Webソケット)。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        <br>
+        <h2>#2 状態遷移</h2>
+            2.1 クライアント側<br>
+        <br>
+            <center>
+                <!-- (width, height) = (988, 403) ; height = width * 0.408 -->
+                <img src="figures_ja/fig2a_states_client_side_ja.jpg">
+            </center>
+        <br>
+            2.2 サーバ側<br>
+        <br>
+            <center>
+                <!-- (width, height) = (752, 273) ; height = width * 0.363 -->
+                <img src="figures_ja/fig2b_states_server_side_ja.jpg">
+            </center>
+        <br>
+        <h2>#3 シーケンス図</h2>
+            3.1 初期化<br>
+        <br>
+            <center>
+                <!-- (width, height) = (691, 598) ; height = width * 0.865 -->
+                <img src="figures_ja/fig3a_initialize_ja.jpg">
+            </center>
+        <br>
+            3.2 ボールをショット<br>
+        <br>
+            <center>
+                <!-- (width, height) = (904, 544) ; height = width * 0.602 -->
+                <img src="figures_ja/fig3b_shot_ja.jpg">
+            </center>
+        <br>
+            3.3 ゲームの終了<br>
+        <br>
+            <center>
+                <!-- (width, height) = (875, 517) ; height = width * 0.591 -->
+                <img src="figures_ja/fig3c_gameover_ja.jpg">
+            </center>
+        <br>
+        <h2>#4 クラス図</h2>
+            <center>
+                <!-- (width, height) = (1013, 378) ; height = width * 0.373 -->
+                <img src="figures_ja/fig4_class_diagrams_ja.jpg">
+            </center>
+        <br>
+        <h2>#5 開発環境</h2>
+            <div style="margin-left:50px;">
+                <table>
+                    <thead>
+                       <th>クライアント/サーバ</th><th>内容</th>
+                    </thead>
+                    <tbody>
+                       <tr>
+                           <td>クライアント</td><td>Unity 2018.2.13f、スクリプトエンジン: .NET 4.x</td>
+                       </tr>
+                       <tr>
+                           <td>サーバ</td><td>ASP.NET Core (C# 7.0) (VS2017) (または node.js)</td>
+                       </tr>
+                    </tbody>
+                </table>
+            </div>
+        <br>
+        <h2>#6 実装のアーキテクチャ</h2><br>
+        <br>
+    </div>
+</p>
+</body>
+</html>
