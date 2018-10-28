@@ -103,6 +103,12 @@ public class GameController : MonoBehaviour {
                             return;
                         }
 
+                        // ゲームオーバー判定
+                        if (dtoClientState.IsGameOver) {
+                            state.ChangeToGameOver();
+                            return;
+                        }
+
                         if (dtoClientState.IsActiveTurn) {
                             if (state.IsWatingTurn)
                                 state.Change();
@@ -229,6 +235,8 @@ public class GameController : MonoBehaviour {
                 var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
                 RaycastHit hitInfo;
                 var hitObject = GetHitObject(ray, out hitInfo);
+                if (hitObject == null)
+                    return false;
                 if (hitObject != null &&
                     (string.Compare(hitObject.tag, Constants.ballOtherTag) == 0 || string.Compare(hitObject.tag, Constants.ball9Tag) == 0)) {
                     // 別のボールにぶつかる (微妙な位置判定まではしていない)
@@ -372,7 +380,7 @@ public class GameController : MonoBehaviour {
             var ball = bufferBalls[i];
             if (string.Compare(ball.tag, Constants.ball9Tag) != 0)
                 continue;
-            if (ball.transform.position.y < 0f)
+            if (ball.transform.position.y < 1f) // 誤差対策
                 return true;
         }
 

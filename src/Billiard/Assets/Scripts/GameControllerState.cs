@@ -31,6 +31,8 @@
 
         public void ErrorState() => state = -3;
 
+        public void ChangeToGameOver() => state = 4;
+
         public void Change(bool isGameOver = false)
         {
             if (IsOnline)
