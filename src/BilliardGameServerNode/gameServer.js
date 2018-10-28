@@ -14,10 +14,6 @@ function onRequest(request, response) {
     response.end();
 }
 
-function broadcastToEachClient() {
-
-}
-
 // [前提1] クライアントは2接続
 function init() {
     console.log('game server started.');
@@ -49,15 +45,24 @@ function init() {
                 console.log('count of client is not 2.');
                 return;
             }
-            var json = JSON.parse(data);
+            //var json = JSON.parse(data);
             // 位置情報、終了かどうかの受取り
-            console.log(json);
+            //console.log(json);
+            //console.log(json.IsGameOver);
 
             // ターンのスイッチ
             activeTurnIndex = (activeTurnIndex + 1) % 2;
 
-            // 全クライアントに位置情報、終了かどうか、ターン情報をブロードキャスト
-            //ws_connection.send("start");            
+            // 全クライアントに位置情報、終了かどうか、ターン情報をブロードキャスト (ターン以外をエコー)
+            if (activeTurnIndex == 0) {
+                ws_connections[0].send(data); // echo
+                data = data.replace('"IsActiveTurn":true', '"IsActiveTurn":false');
+                ws_connections[1].send(data);
+            } else {
+                ws_connections[1].send(data); // echo
+                data = data.replace('"IsActiveTurn":true', '"IsActiveTurn":false');
+                ws_connections[0].send(data);
+            }
         });
         ws_connection.on('close', function (reasonCode, description) {
             console.log('connection.close');
