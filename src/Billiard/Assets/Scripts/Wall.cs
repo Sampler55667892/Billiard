@@ -1,30 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class Wall : MonoBehaviour {
-
-	void Start () {
-		
-	}
-	
-	void Update () {
-		
-	}
-
-    public void OnTriggerEnter(Collider other)
-    {
-        //Debug.Log("OnTriggerEnter()");
-
-        // 反射
-        var rigidBody = other.GetComponent<Rigidbody>();
-        if (rigidBody == null)
-            return;
-        // 衝突時の反作用
-        //Debug.Log(rigidBody.mass);
-        //Debug.Log(rigidBody.velocity);
-    }
-
     // TODO: 壁反射の調整
     // OnTriggerEnter でなく OnCollisionEnter のタイミングで rigidBody に作用を与える (壁反射)
     public void OnCollisionEnter(Collision collision)

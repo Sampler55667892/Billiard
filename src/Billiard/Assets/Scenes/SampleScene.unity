@@ -301,10 +301,9 @@ GameObject:
   - component: {fileID: 173215623}
   - component: {fileID: 173215622}
   - component: {fileID: 173215621}
-  - component: {fileID: 173215625}
   m_Layer: 0
   m_Name: Ball6
-  m_TagString: MainBall
+  m_TagString: BallOther
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -391,18 +390,6 @@ MeshFilter:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 173215619}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
---- !u!114 &173215625
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 173215619}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 020a180c45d80e947a050b428aaa3688, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  gameController: {fileID: 487397955}
 --- !u!1 &231439244
 GameObject:
   m_ObjectHideFlags: 0
@@ -664,10 +651,9 @@ GameObject:
   - component: {fileID: 351881226}
   - component: {fileID: 351881225}
   - component: {fileID: 351881224}
-  - component: {fileID: 351881228}
   m_Layer: 0
   m_Name: Ball7
-  m_TagString: MainBall
+  m_TagString: BallOther
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -754,18 +740,6 @@ MeshFilter:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 351881222}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
---- !u!114 &351881228
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 351881222}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 020a180c45d80e947a050b428aaa3688, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  gameController: {fileID: 487397955}
 --- !u!1 &372962247
 GameObject:
   m_ObjectHideFlags: 0
@@ -778,10 +752,9 @@ GameObject:
   - component: {fileID: 372962250}
   - component: {fileID: 372962249}
   - component: {fileID: 372962248}
-  - component: {fileID: 372962253}
   m_Layer: 0
   m_Name: Ball2
-  m_TagString: MainBall
+  m_TagString: BallOther
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -868,18 +841,6 @@ Transform:
   m_Father: {fileID: 1018272411}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &372962253
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 372962247}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 020a180c45d80e947a050b428aaa3688, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  gameController: {fileID: 487397955}
 --- !u!1 &376994589
 GameObject:
   m_ObjectHideFlags: 0
@@ -1048,10 +1009,9 @@ GameObject:
   - component: {fileID: 477674007}
   - component: {fileID: 477674006}
   - component: {fileID: 477674005}
-  - component: {fileID: 477674009}
   m_Layer: 0
   m_Name: Ball8
-  m_TagString: MainBall
+  m_TagString: BallOther
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1138,18 +1098,6 @@ MeshFilter:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 477674003}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
---- !u!114 &477674009
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 477674003}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 020a180c45d80e947a050b428aaa3688, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  gameController: {fileID: 487397955}
 --- !u!1 &487397955
 GameObject:
   m_ObjectHideFlags: 0
@@ -1191,6 +1139,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ballsGameObject: {fileID: 1018272410}
+  ballToShot: {fileID: 1718686503}
 --- !u!1 &534669902
 GameObject:
   m_ObjectHideFlags: 0
@@ -1280,10 +1229,9 @@ GameObject:
   - component: {fileID: 671627370}
   - component: {fileID: 671627369}
   - component: {fileID: 671627368}
-  - component: {fileID: 671627373}
   m_Layer: 0
   m_Name: Ball1
-  m_TagString: MainBall
+  m_TagString: BallOther
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1370,18 +1318,6 @@ Transform:
   m_Father: {fileID: 1018272411}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &671627373
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 671627367}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 020a180c45d80e947a050b428aaa3688, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  gameController: {fileID: 487397955}
 --- !u!1 &731762238
 GameObject:
   m_ObjectHideFlags: 0
@@ -1556,10 +1492,9 @@ GameObject:
   - component: {fileID: 927353322}
   - component: {fileID: 927353321}
   - component: {fileID: 927353320}
-  - component: {fileID: 927353324}
   m_Layer: 0
   m_Name: Ball4
-  m_TagString: MainBall
+  m_TagString: BallOther
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1646,18 +1581,6 @@ MeshFilter:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 927353318}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
---- !u!114 &927353324
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 927353318}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 020a180c45d80e947a050b428aaa3688, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  gameController: {fileID: 487397955}
 --- !u!1 &949310447
 GameObject:
   m_ObjectHideFlags: 0
@@ -1866,6 +1789,7 @@ Transform:
   - {fileID: 351881223}
   - {fileID: 477674004}
   - {fileID: 1566941765}
+  - {fileID: 1718686504}
   m_Father: {fileID: 0}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -2537,10 +2461,9 @@ GameObject:
   - component: {fileID: 1566941763}
   - component: {fileID: 1566941762}
   - component: {fileID: 1566941766}
-  - component: {fileID: 1566941767}
   m_Layer: 0
   m_Name: Ball9
-  m_TagString: MainBall
+  m_TagString: Ball9
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2627,18 +2550,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &1566941767
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1566941761}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 020a180c45d80e947a050b428aaa3688, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  gameController: {fileID: 487397955}
 --- !u!1 &1595886110
 GameObject:
   m_ObjectHideFlags: 0
@@ -3004,6 +2915,107 @@ MeshFilter:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1714998074}
   m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1718686503
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1718686504}
+  - component: {fileID: 1718686507}
+  - component: {fileID: 1718686506}
+  - component: {fileID: 1718686505}
+  - component: {fileID: 1718686508}
+  m_Layer: 0
+  m_Name: BallToShot
+  m_TagString: BallToShot
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1718686504
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1718686503}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1018272411}
+  m_RootOrder: 9
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!135 &1718686505
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1718686503}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.5
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!23 &1718686506
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1718686503}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RenderingLayerMask: 4294967295
+  m_Materials:
+  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 0
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+--- !u!33 &1718686507
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1718686503}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!54 &1718686508
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1718686503}
+  serializedVersion: 2
+  m_Mass: 1
+  m_Drag: 0.2
+  m_AngularDrag: 0.2
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1 &1758113851
 GameObject:
   m_ObjectHideFlags: 0
@@ -3050,10 +3062,9 @@ GameObject:
   - component: {fileID: 1772195444}
   - component: {fileID: 1772195443}
   - component: {fileID: 1772195442}
-  - component: {fileID: 1772195446}
   m_Layer: 0
   m_Name: Ball3
-  m_TagString: MainBall
+  m_TagString: BallOther
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -3140,18 +3151,6 @@ MeshFilter:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1772195440}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
---- !u!114 &1772195446
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1772195440}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 020a180c45d80e947a050b428aaa3688, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  gameController: {fileID: 487397955}
 --- !u!1 &1795329639
 GameObject:
   m_ObjectHideFlags: 0
@@ -3251,10 +3250,9 @@ GameObject:
   - component: {fileID: 1857539589}
   - component: {fileID: 1857539588}
   - component: {fileID: 1857539587}
-  - component: {fileID: 1857539591}
   m_Layer: 0
   m_Name: Ball5
-  m_TagString: MainBall
+  m_TagString: BallOther
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -3341,18 +3339,6 @@ MeshFilter:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1857539585}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
---- !u!114 &1857539591
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1857539585}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 020a180c45d80e947a050b428aaa3688, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  gameController: {fileID: 487397955}
 --- !u!1 &2014271716
 GameObject:
   m_ObjectHideFlags: 0
@@ -3366,7 +3352,7 @@ GameObject:
   - component: {fileID: 2014271717}
   m_Layer: 0
   m_Name: BoardBase
-  m_TagString: Untagged
+  m_TagString: MainBoard
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

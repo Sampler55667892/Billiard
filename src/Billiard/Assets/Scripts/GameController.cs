@@ -3,24 +3,28 @@ using Assets.Scripts;
 using System.Collections.Generic;
 using WebSocketSharp;
 
-public class GameController : MonoBehaviour, INotifyStopping {
+public class GameController : MonoBehaviour {
 
     public GameObject ballsGameObject;
+    public GameObject ballToShot;
 
     const int mouseLeftButtonId = 0;
     const int mouseRightButtonId = 1;
     const float forceFactor = 10000.0f; // 調整
     const float decisionRotationDeg = 0.5f;
-    const string mainBallTag = "MainBall";
+    const string ballToShotTag = "BallToShot";
+    const string ballOtherTag = "BallOther";
+    const string ball9Tag = "Ball9";
+    const string mainBoardTag = "MainBoard";
     // 各ボールの停止チェック用
     const int periodFramesBallStopCheck = 120;
     const float nearlyStoppedSpeed = 0.3f;
 
     GameControllerState state;
-    GameObject selectedBall;
-    bool shots;
-    List<GameObject> bufferBalls;
     int countFramesBallStopped;
+
+    // Update() 内で呼ぶものは毎回 new しないようにする
+    List<GameObject> bufferBalls;
 
     WebSocket ws_socket;
 
@@ -45,17 +49,23 @@ public class GameController : MonoBehaviour, INotifyStopping {
     void Awake()
     {
         state = new GameControllerState();
-        //xxxxx
-        state._Test(1);
+
+        if (!GameControllerState.IsOnline)
+            state.ForceSet(1);
 
         Initialize();
     }
 
+    void Start()
+    {
+        ballToShot.SetActive(false);
+    }
+
     void Initialize()
     {
-        shots = false;
-        bufferBalls = new List<GameObject>();
+        state.Shots = false;
         countFramesBallStopped = 0;
+        bufferBalls = new List<GameObject>();
 
         // WebSocket で Server に接続
         if (!ConnectToServer())
@@ -74,20 +84,12 @@ public class GameController : MonoBehaviour, INotifyStopping {
         };
         ws_socket.OnClose += (sender, e) => {
             Debug.Log("ws.OnClose()");
+            ws_socket = null;
         };
-        //Debug.Log("Pre ws.Connect()");
         ws_socket.Connect();
-        //Debug.Log("Post ws.Connect()");
-        //ws_socket.Send("_TEST_ ws");
-
-        //ws_socket.Close();
 
         return true;
     }
-
-    void Start () {
-		
-	}
 	
 	void Update () {
         UpdateUIText();
@@ -97,14 +99,19 @@ public class GameController : MonoBehaviour, INotifyStopping {
         if (ProcessKeyEvent())
             return;
 
+        GetBallRefs();
+
         if (CheckAllBallStopped()) {
+            // 手玉を回収
+            ballToShot.SetActive(false);
+
             // サーバにショット後に停止したボール位置を送信
             if (ws_socket != null) {
                 ws_socket.Send("ball positions...");
             }
 
-            state.ChangeState();
-            //Debug.Log($"state.IsWatingTurn: {state.IsWatingTurn}");
+            var isGameOver = CheckBall9Dropped();
+            state.Change(isGameOver);
         }
 	}
 
@@ -114,8 +121,8 @@ public class GameController : MonoBehaviour, INotifyStopping {
         var uiText = canvas.transform.Find("Text").gameObject.GetComponent<UnityEngine.UI.Text>();
         var slider = canvas.transform.Find("Slider").gameObject;
 
-        if (state.IsSelectingBall) {
-            uiText.text = "Please select a ball (Click).";
+        if (state.IsSettingAtackBall) {
+            uiText.text = "Please set a atack ball (Click).";
             slider.SetActive(false);
             ShotButton.SetActive(false);
         } else if (state.IsDecidingDirection) {
@@ -126,6 +133,8 @@ public class GameController : MonoBehaviour, INotifyStopping {
             uiText.text = "Please decide shot power.";
             slider.SetActive(true);
             ShotButton.SetActive(true);
+        } else if (state.IsGameOver) {
+            uiText.text = "Game is over.";
         }
     }
 
@@ -141,26 +150,31 @@ public class GameController : MonoBehaviour, INotifyStopping {
     bool ProcessMouseLeftEvent()
     {
         if (Input.GetMouseButtonDown(mouseLeftButtonId)) {
-            if (state.IsSelectingBall) {
+            if (state.IsSettingAtackBall) {
                 var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                var hitObject = GetHitObject(ray);
-                if (hitObject != null && string.Compare(hitObject.tag, mainBallTag) == 0) {
-                    selectedBall = hitObject;
-                    state.ChangeState();
+                RaycastHit hitInfo;
+                var hitObject = GetHitObject(ray, out hitInfo);
+                if (hitObject != null &&
+                    (string.Compare(hitObject.tag, ballOtherTag) == 0 || string.Compare(hitObject.tag, ball9Tag) == 0)) {
+                    // 別のボールにぶつかる (微妙な位置判定まではしていない)
+                    return false;
+                }
+                if (string.Compare(hitObject.tag, mainBoardTag) == 0) { // これで置く場所の決定と配置位置がボード上かを判定
+                    var positionToSet = hitInfo.point;
+                    // y座標補正
+                    positionToSet.y = 0.5f;
+                    ballToShot.transform.position = positionToSet;
+                    ballToShot.SetActive(true);
+
+                    state.Change();
                 }
             } else if (state.IsDecidingDirection)
-                state.ChangeState();
+                state.Change();
             else if (state.IsDecidingShotPower) {
-                //state.ChangeState();
-                //ShotBall();
             }
 
             return true;
         } else if (Input.GetMouseButtonUp(mouseLeftButtonId)) {
-            //if (state.IsDecidingShotPower) {
-            //    state.ChangeState();
-            //    ShotBall();
-            //}
         }
         return false;
     }
@@ -177,15 +191,15 @@ public class GameController : MonoBehaviour, INotifyStopping {
         var moveVector = Vector3.zero;
         var moveFactor = 0.5f;
 
-        if (state.IsSelectingBall) {
+        if (state.IsSettingAtackBall) {
             if (Input.GetKeyDown(KeyCode.LeftArrow))
                 moveVector = Vector3.left * moveFactor;
             else if (Input.GetKeyDown(KeyCode.RightArrow))
                 moveVector = Vector3.right * moveFactor;
             else if (Input.GetKeyDown(KeyCode.UpArrow))
-                moveVector = Vector3.forward * moveFactor;
+                moveVector = Vector3.up * moveFactor;
             else if (Input.GetKeyDown(KeyCode.DownArrow))
-                moveVector = Vector3.back * moveFactor;
+                moveVector = Vector3.down * moveFactor;
 
             if (moveVector == Vector3.zero)
                 return false;
@@ -195,16 +209,23 @@ public class GameController : MonoBehaviour, INotifyStopping {
 
             return true;
         } else if (state.IsDecidingDirection) {
-            System.Diagnostics.Debug.Assert(selectedBall != null);
-            // ボール中心の回転
-            if (Input.GetKey(KeyCode.LeftArrow))
-                Camera.main.transform.RotateAround(selectedBall.transform.position, Vector3.up, decisionRotationDeg);
+            // 手玉中心の回転
+            if (Input.GetKey(KeyCode.LeftArrow))      
+                Camera.main.transform.RotateAround(ballToShot.transform.position, Vector3.up, decisionRotationDeg);
             else if (Input.GetKey(KeyCode.RightArrow))
-                Camera.main.transform.RotateAround(selectedBall.transform.position, Vector3.up, -decisionRotationDeg);
+                Camera.main.transform.RotateAround(ballToShot.transform.position, Vector3.up, -decisionRotationDeg);
             return false;
         }
 
         return false;
+    }
+
+    void GetBallRefs()
+    {
+        bufferBalls.Clear();
+
+        for (var i = 0; i < ballsGameObject.transform.childCount; ++i)
+            bufferBalls.Add(ballsGameObject.transform.GetChild(i).gameObject);
     }
 
     // 各ボールが一定フレームの間、一定速度以下になったかどうかチェック
@@ -212,12 +233,8 @@ public class GameController : MonoBehaviour, INotifyStopping {
     {
         if (!state.IsDecidingShotPower)
             return false;
-        if (!shots)
+        if (!state.Shots)
             return false;
-
-        bufferBalls.Clear();
-        for (var i = 0; i < ballsGameObject.transform.childCount; ++i)
-            bufferBalls.Add(ballsGameObject.transform.GetChild(i).gameObject);
 
         if (bufferBalls.Count == 0)
             return false;
@@ -254,14 +271,29 @@ public class GameController : MonoBehaviour, INotifyStopping {
         return false;
     }
 
+    bool CheckBall9Dropped()
+    {
+        if (bufferBalls.Count == 0)
+            return false;
+
+        for (var i = 0; i < bufferBalls.Count; ++i) {
+            var ball = bufferBalls[i];
+            if (string.Compare(ball.tag, ball9Tag) != 0)
+                continue;
+            if (ball.transform.position.y < 0f)
+                return true;
+        }
+
+        return false;
+    }
+
     void ShotBall()
     {
-        System.Diagnostics.Debug.Assert(selectedBall != null);
+        System.Diagnostics.Debug.Assert(ballToShot != null);
 
-        var rigidBody = selectedBall.GetComponent<Rigidbody>();
+        var rigidBody = ballToShot.GetComponent<Rigidbody>();
 
-		//var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-		var ray = selectedBall.transform.position - Camera.main.transform.position;
+		var ray = ballToShot.transform.position - Camera.main.transform.position;
         var direction = ray;
         direction.Normalize();
         var forceScale = UISlider.value * forceFactor;
@@ -272,25 +304,11 @@ public class GameController : MonoBehaviour, INotifyStopping {
         Debug.Log("Added Force.");
     }
 
-    GameObject GetHitObject(Ray ray)
+    GameObject GetHitObject(Ray ray, out RaycastHit hitInfo)
     {
-        RaycastHit hitInfo;
         if (Physics.Raycast(ray, out hitInfo)) {
             var hitObject = hitInfo.collider.gameObject;
             return hitObject;
-        }
-        return null;
-    }
-
-    Rigidbody GetHitRigidBody(Ray ray)
-    {
-        GameObject hitObject = GetHitObject(ray);
-        if (hitObject != null) {
-            if (string.Compare(hitObject.tag, mainBallTag) == 0) {
-                var rigidBody = hitObject.GetComponent<Rigidbody>();
-                //Debug.Log(rigidBody);
-                return rigidBody;
-            }
         }
         return null;
     }
@@ -300,18 +318,12 @@ public class GameController : MonoBehaviour, INotifyStopping {
         Debug.Log("OnShotButtonClicked()");
 
         if (state.IsDecidingShotPower) {
-            //state.ChangeState();
-            shots = true;
+            state.Shots = true;
             ShotBall();
 
             // TODO: 全ボールが停止した > Server に HTTP で移動後のボール座標とポケットしているかどうかを送信
             // > サーバからの Broadcast 待ち状態 (Wait turn) に状態遷移
             // 全ボールの速さが一定時間間隔内で一定値以下であり続けたら (反射による停止除外) 全て停止させる
         }
-    }
-
-    public void OnNotifyStopping(string name)
-    {
-        Debug.Log($"OnNotifyStopping(name: {name})");
     }
 }
