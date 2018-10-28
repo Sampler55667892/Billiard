@@ -380,7 +380,7 @@ public class GameController : MonoBehaviour {
             var ball = bufferBalls[i];
             if (string.Compare(ball.tag, Constants.ball9Tag) != 0)
                 continue;
-            if (ball.transform.position.y < 1f) // 誤差対策
+            if (ball.transform.position.y < -1f) // 誤差対策
                 return true;
         }
 
