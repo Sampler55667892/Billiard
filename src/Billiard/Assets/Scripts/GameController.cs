@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using Assets.Scripts;
+using Assets.Scripts.DTO;
 using System.Collections.Generic;
 using WebSocketSharp;
 
@@ -7,6 +8,7 @@ public class GameController : MonoBehaviour {
 
     public GameObject ballsGameObject;
     public GameObject ballToShot;
+    public GameObject line;
 
     const float forceFactor = 10000.0f; // 調整
     const float decisionRotationDeg = 0.5f;
@@ -18,9 +20,10 @@ public class GameController : MonoBehaviour {
     int countFramesBallStopped;
 
     // Update() 内で呼ぶものは毎回 new しないようにする
+    DTOClientState dtoClientState;
     List<GameObject> bufferBalls;
 
-    WebSocket ws_socket;
+    WebSocket ws_connection;
 
     UnityEngine.UI.Slider UISlider
     {
@@ -50,16 +53,12 @@ public class GameController : MonoBehaviour {
         Initialize();
     }
 
-    void Start()
-    {
-        ballToShot.SetActive(false);
-    }
-
     void Initialize()
     {
         state.Shots = false;
         countFramesBallStopped = 0;
         bufferBalls = new List<GameObject>();
+        dtoClientState = new DTOClientState();
 
         // WebSocket で Server に接続
         if (GameControllerState.IsOnline)
@@ -68,12 +67,12 @@ public class GameController : MonoBehaviour {
 
     void ConnectToServer()
     {
-        ws_socket = new WebSocket("ws://127.0.0.1:8080/ws");
+        ws_connection = new WebSocket($"ws://{Constants.serverHost}:{Constants.serverPort}/ws");
         // ハンドラ登録
-        ws_socket.OnOpen += (sender, e) => {
+        ws_connection.OnOpen += (sender, e) => {
             Debug.Log("ws.OnOpen()");
         };
-        ws_socket.OnMessage += (sender, e) => {
+        ws_connection.OnMessage += (sender, e) => {
             Debug.Log($"ws.OnMessage(): {e.Data}");
             if (string.Compare(Constants.srvm_activeTurn, e.Data) == 0) {
                 state.Change();
@@ -81,12 +80,21 @@ public class GameController : MonoBehaviour {
                 // nop
             }
         };
-        ws_socket.OnClose += (sender, e) => {
+        ws_connection.OnClose += (sender, e) => {
             Debug.Log("ws.OnClose()");
             state.Abort();
-            ws_socket = null;
+            ws_connection = null;
         };
-        ws_socket.Connect();
+        ws_connection.Connect();
+    }
+
+    void Start()
+    {
+        ballToShot.SetActive(false);
+
+        dtoClientState.BallStates = new DTOBallState[ballsGameObject.transform.childCount];
+        for (var i = 0; i < dtoClientState.BallStates.Length; ++i)
+            dtoClientState.BallStates[i] = new DTOBallState();
     }
 	
 	void Update () {
@@ -103,13 +111,12 @@ public class GameController : MonoBehaviour {
             // 手玉を回収
             ballToShot.SetActive(false);
 
-            // サーバにショット後に停止したボール位置を送信
-            if (ws_socket != null) {
-                //ws_socket.Send("ball positions...");
-            }
-
             var isGameOver = CheckBall9Dropped();
-            state.Change(isGameOver);
+            // オフラインなら通信なしで状態遷移
+            if (GameControllerState.IsOnline)
+                SendClientState(isGameOver);
+            else
+                state.Change(isGameOver);
         }
 	}
 
@@ -217,14 +224,28 @@ public class GameController : MonoBehaviour {
             return true;
         } else if (state.IsDecidingDirection) {
             // 手玉中心の回転
-            if (Input.GetKey(KeyCode.LeftArrow))      
+            if (Input.GetKey(KeyCode.LeftArrow)) {
                 Camera.main.transform.RotateAround(ballToShot.transform.position, Vector3.up, decisionRotationDeg);
-            else if (Input.GetKey(KeyCode.RightArrow))
+                ShowShotLine();
+            } else if (Input.GetKey(KeyCode.RightArrow)) {
                 Camera.main.transform.RotateAround(ballToShot.transform.position, Vector3.up, -decisionRotationDeg);
+                ShowShotLine();
+            }
             return false;
         }
 
         return false;
+    }
+
+    void ShowShotLine()
+    {
+        line.SetActive(true);
+
+        var cameraPosition = Camera.main.transform.position;
+        cameraPosition.y = 0f;
+        var ballToShotPosition = ballToShot.transform.position;
+        var lineRenderer = line.GetComponent<LineRenderer>();
+        lineRenderer.SetPositions(new Vector3[] { cameraPosition, ballToShotPosition });
     }
 
     void GetBallRefs()
@@ -300,8 +321,15 @@ public class GameController : MonoBehaviour {
 
         var rigidBody = ballToShot.GetComponent<Rigidbody>();
 
-		var ray = ballToShot.transform.position - Camera.main.transform.position;
-        var direction = ray;
+        // 線を非表示
+        line.SetActive(false);
+
+        // カメラは位置 + 局所座標系を持つ + 並行移動 + 追加の回転あり
+        var cameraPosition = Camera.main.transform.position;
+        var ballToShotPosition = ballToShot.transform.position;
+
+        var direction = ballToShotPosition - cameraPosition;
+        direction.y = 0f;
         direction.Normalize();
         var forceScale = UISlider.value * forceFactor;
         Debug.Log($"forceScale: {forceScale}");
@@ -309,6 +337,12 @@ public class GameController : MonoBehaviour {
         rigidBody.AddForce(force);
 
         Debug.Log("Added Force.");
+
+        //_DEBUG
+        //UpdateDTOClientState(false);
+        //Debug.Log(dtoClientState);
+        //var json = JsonUtility.ToJson(dtoClientState);
+        //Debug.Log(json);
     }
 
     GameObject GetHitObject(Ray ray, out RaycastHit hitInfo)
@@ -331,6 +365,46 @@ public class GameController : MonoBehaviour {
             // TODO: 全ボールが停止した > Server に HTTP で移動後のボール座標とポケットしているかどうかを送信
             // > サーバからの Broadcast 待ち状態 (Wait turn) に状態遷移
             // 全ボールの速さが一定時間間隔内で一定値以下であり続けたら (反射による停止除外) 全て停止させる
+        }
+    }
+
+    void SendClientState(bool isGameOver)
+    {
+        Debug.Log("SendClientState()");
+
+        // サーバにショット後に停止したボール位置などを送信
+        if (ws_connection == null)
+            return;
+
+        UpdateDTOClientState(isGameOver);
+        var json = JsonUtility.ToJson(dtoClientState);
+        Debug.Log(json);
+
+        ws_connection.Send(json);
+        // 再送しないために状態遷移
+        state.Change(isGameOver);
+    }
+
+    void UpdateDTOClientState(bool isGameOver)
+    {
+        dtoClientState.IsGameOver = isGameOver;
+
+        for (var i = 0; i < ballsGameObject.transform.childCount; ++i)
+            UpdateDTOBallStates(i, ballsGameObject.transform.GetChild(i).gameObject);
+    }
+
+    void UpdateDTOBallStates(int index, GameObject ball)
+    {
+        dtoClientState.BallStates[index].Position = DTOVector3.ConvertFrom(ball.transform.position);
+        dtoClientState.BallStates[index].Rotation = DTOVector3.ConvertFrom(ball.transform.rotation.eulerAngles);
+    }
+
+    void OnDestroy()
+    {
+        // ソケットの明示的な切断
+        if (ws_connection != null) {
+            ws_connection.Close();
+            ws_connection = null;
         }
     }
 }
