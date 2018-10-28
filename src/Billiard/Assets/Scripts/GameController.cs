@@ -3,6 +3,7 @@ using Assets.Scripts;
 using Assets.Scripts.DTO;
 using System.Collections.Generic;
 using WebSocketSharp;
+using System;
 
 public class GameController : MonoBehaviour {
 
@@ -22,6 +23,9 @@ public class GameController : MonoBehaviour {
     // Update() 内で呼ぶものは毎回 new しないようにする
     DTOClientState dtoClientState;
     List<GameObject> bufferBalls;
+
+    // Updateスレッドで実行する Action
+    Action actionTask;
 
     WebSocket ws_connection;
 
@@ -74,18 +78,69 @@ public class GameController : MonoBehaviour {
         };
         ws_connection.OnMessage += (sender, e) => {
             Debug.Log($"ws.OnMessage(): {e.Data}");
+            // 初回
             if (string.Compare(Constants.srvm_activeTurn, e.Data) == 0) {
-                state.Change();
+                if (state.IsWatingTurn)
+                    state.Change();
+                else
+                    state.ErrorState();
             } else if (string.Compare(Constants.srvm_notActiveTurn, e.Data) == 0) {
                 // nop
+            } else {
+                // 初回以降
+                dtoClientState = JsonUtility.FromJson<DTOClientState>(e.Data);
+                //Debug.Log($"dto: {dto}");
+                if (dtoClientState == null)
+                    state.ErrorWebSocket();
+                else {
+                    // このコンテキストで GameObject の transform を変更するとエラー発生 -> Update() で実行させる
+                    actionTask = () => {
+                        Debug.Log("actionTask()/Sync");
+
+                        // ボール位置の同期
+                        if (!SyncBallPositions(dtoClientState.BallStates)) {
+                            state.ErrorWebSocket();
+                            return;
+                        }
+
+                        if (dtoClientState.IsActiveTurn) {
+                            if (state.IsWatingTurn)
+                                state.Change();
+                            else
+                                state.ErrorState();
+                        } else {
+                            // nop
+                        }
+                    };
+                }
             }
         };
         ws_connection.OnClose += (sender, e) => {
             Debug.Log("ws.OnClose()");
-            state.Abort();
+            state.ErrorWebSocket();
             ws_connection = null;
         };
         ws_connection.Connect();
+    }
+
+    bool SyncBallPositions(DTOBallState[] ballStates)
+    {
+        if (ballStates == null)
+            return false;
+        if (ballStates.Length != ballsGameObject.transform.childCount) {
+            Debug.Log($"ballStates.Length: {ballStates.Length}");
+            Debug.Log($"ballsGameObject.transform.childCount: {ballsGameObject.transform.childCount}");
+            return false;
+        }
+
+        for (var i = 0; i < ballsGameObject.transform.childCount; ++i) {
+            var ball = ballsGameObject.transform.GetChild(i).gameObject;
+            var ballState = ballStates[i];
+            ball.transform.position = ballState.Position.UnityVector3;
+            ball.transform.rotation = Quaternion.Euler(ballState.Rotation.UnityVector3);
+        }
+
+        return true;
     }
 
     void Start()
@@ -98,6 +153,12 @@ public class GameController : MonoBehaviour {
     }
 	
 	void Update () {
+        if (actionTask != null) {
+            actionTask();
+            actionTask = null;
+            return;
+        }
+
         UpdateUIText();
 
         if (ProcessMouseEvent())
@@ -142,11 +203,14 @@ public class GameController : MonoBehaviour {
             uiText.text = "Please decide shot power.";
             slider.SetActive(true);
             ShotButton.SetActive(true);
-        } else if (state.IsGameOver) {
+        } else if (state.IsGameOver)
             uiText.text = "Game is over.";
-        } else if (state.IsAbort) {
+        else if (state.IsAbort)
+            uiText.text = "Error.";
+        else if (state.IsWebSocketError)
             uiText.text = "Web socket connection error.";
-        }
+        else if (state.IsStateError)
+            uiText.text = "State error.";
     }
 
     bool ProcessMouseEvent()
@@ -387,6 +451,7 @@ public class GameController : MonoBehaviour {
 
     void UpdateDTOClientState(bool isGameOver)
     {
+        dtoClientState.IsActiveTurn = true;
         dtoClientState.IsGameOver = isGameOver;
 
         for (var i = 0; i < ballsGameObject.transform.childCount; ++i)

@@ -20,10 +20,16 @@
         public bool IsDecidingShotPower => state == 3;
         public bool IsGameOver => state == 4;
         public bool IsAbort => state == -1;
+        public bool IsWebSocketError => state == -2;
+        public bool IsStateError => state == -3;
 
         public void Initialize() => state = 0;
 
         public void Abort() => state = -1;
+
+        public void ErrorWebSocket() => state = -2;
+
+        public void ErrorState() => state = -3;
 
         public void Change(bool isGameOver = false)
         {
