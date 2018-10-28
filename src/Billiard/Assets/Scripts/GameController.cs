@@ -8,14 +8,8 @@ public class GameController : MonoBehaviour {
     public GameObject ballsGameObject;
     public GameObject ballToShot;
 
-    const int mouseLeftButtonId = 0;
-    const int mouseRightButtonId = 1;
     const float forceFactor = 10000.0f; // 調整
     const float decisionRotationDeg = 0.5f;
-    const string ballToShotTag = "BallToShot";
-    const string ballOtherTag = "BallOther";
-    const string ball9Tag = "Ball9";
-    const string mainBoardTag = "MainBoard";
     // 各ボールの停止チェック用
     const int periodFramesBallStopCheck = 120;
     const float nearlyStoppedSpeed = 0.3f;
@@ -68,11 +62,11 @@ public class GameController : MonoBehaviour {
         bufferBalls = new List<GameObject>();
 
         // WebSocket で Server に接続
-        if (!ConnectToServer())
-            state.Abort();
+        if (GameControllerState.IsOnline)
+            ConnectToServer();
     }
 
-    bool ConnectToServer()
+    void ConnectToServer()
     {
         ws_socket = new WebSocket("ws://127.0.0.1:8080/ws");
         // ハンドラ登録
@@ -81,14 +75,18 @@ public class GameController : MonoBehaviour {
         };
         ws_socket.OnMessage += (sender, e) => {
             Debug.Log($"ws.OnMessage(): {e.Data}");
+            if (string.Compare(Constants.srvm_activeTurn, e.Data) == 0) {
+                state.Change();
+            } else if (string.Compare(Constants.srvm_notActiveTurn, e.Data) == 0) {
+                // nop
+            }
         };
         ws_socket.OnClose += (sender, e) => {
             Debug.Log("ws.OnClose()");
+            state.Abort();
             ws_socket = null;
         };
         ws_socket.Connect();
-
-        return true;
     }
 	
 	void Update () {
@@ -107,7 +105,7 @@ public class GameController : MonoBehaviour {
 
             // サーバにショット後に停止したボール位置を送信
             if (ws_socket != null) {
-                ws_socket.Send("ball positions...");
+                //ws_socket.Send("ball positions...");
             }
 
             var isGameOver = CheckBall9Dropped();
@@ -121,7 +119,11 @@ public class GameController : MonoBehaviour {
         var uiText = canvas.transform.Find("Text").gameObject.GetComponent<UnityEngine.UI.Text>();
         var slider = canvas.transform.Find("Slider").gameObject;
 
-        if (state.IsSettingAtackBall) {
+        if (state.IsWatingTurn) {
+            uiText.text = "Waiting turn.";
+            slider.SetActive(false);
+            ShotButton.SetActive(false);
+        } else if (state.IsSettingAtackBall) {
             uiText.text = "Please set a atack ball (Click).";
             slider.SetActive(false);
             ShotButton.SetActive(false);
@@ -135,6 +137,8 @@ public class GameController : MonoBehaviour {
             ShotButton.SetActive(true);
         } else if (state.IsGameOver) {
             uiText.text = "Game is over.";
+        } else if (state.IsAbort) {
+            uiText.text = "Web socket connection error.";
         }
     }
 
@@ -149,20 +153,23 @@ public class GameController : MonoBehaviour {
 
     bool ProcessMouseLeftEvent()
     {
-        if (Input.GetMouseButtonDown(mouseLeftButtonId)) {
+        if (Input.GetMouseButtonDown(Constants.mouseLeftButtonId)) {
             if (state.IsSettingAtackBall) {
                 var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
                 RaycastHit hitInfo;
                 var hitObject = GetHitObject(ray, out hitInfo);
                 if (hitObject != null &&
-                    (string.Compare(hitObject.tag, ballOtherTag) == 0 || string.Compare(hitObject.tag, ball9Tag) == 0)) {
+                    (string.Compare(hitObject.tag, Constants.ballOtherTag) == 0 || string.Compare(hitObject.tag, Constants.ball9Tag) == 0)) {
                     // 別のボールにぶつかる (微妙な位置判定まではしていない)
                     return false;
                 }
-                if (string.Compare(hitObject.tag, mainBoardTag) == 0) { // これで置く場所の決定と配置位置がボード上かを判定
+                if (string.Compare(hitObject.tag, Constants.mainBoardTag) == 0) { // これで置く場所の決定と配置位置がボード上かを判定
                     var positionToSet = hitInfo.point;
                     // y座標補正
                     positionToSet.y = 0.5f;
+                    // 直前の速度を 0 化
+                    var rigidBody = ballToShot.GetComponent<Rigidbody>();
+                    rigidBody.velocity = Vector3.zero;
                     ballToShot.transform.position = positionToSet;
                     ballToShot.SetActive(true);
 
@@ -174,14 +181,14 @@ public class GameController : MonoBehaviour {
             }
 
             return true;
-        } else if (Input.GetMouseButtonUp(mouseLeftButtonId)) {
+        } else if (Input.GetMouseButtonUp(Constants.mouseLeftButtonId)) {
         }
         return false;
     }
 
     bool ProcessMouseRightEvent()
     {
-        if (Input.GetMouseButtonDown(mouseRightButtonId)) {
+        if (Input.GetMouseButtonDown(Constants.mouseRightButtonId)) {
         }
         return false;
     }
@@ -278,7 +285,7 @@ public class GameController : MonoBehaviour {
 
         for (var i = 0; i < bufferBalls.Count; ++i) {
             var ball = bufferBalls[i];
-            if (string.Compare(ball.tag, ball9Tag) != 0)
+            if (string.Compare(ball.tag, Constants.ball9Tag) != 0)
                 continue;
             if (ball.transform.position.y < 0f)
                 return true;
