@@ -7,46 +7,18 @@ var ServerPort = 8080;
 var ws_connections = [];
 var activeTurnIndex = 0;
 
-// [前提1] クライアントは2接続
+// HTTPは利用しない
 function onRequest(request, response) {
     console.log('onRequest');
     console.log(request.url);
-
-    if (request.url == '/updatePosition' && request.method === 'POST') {
-        // HTTP POST で受けて Web socket で返す
-        console.log('updatePosition');
-        if (ws_connections.length != 2) {
-            console.log('count of client is not 2.');
-            response.end();
-            return;
-        }
-
-        var postData = ''; // [前提] body は json
-        request.on('data', function (chunk) {
-            postData += chunk;
-        });
-        request.on('end', function () {
-            var json = JSON.parse(postData);
-            // 位置情報、終了かどうかの受取り
-            console.log(json);
-
-            // ターンのスイッチ
-            activeTurnIndex = (activeTurnIndex + 1) % 2;
-
-            // 全クライアントに位置情報、終了かどうか、ターン情報をブロードキャスト
-            //ws_connection.send("start");
-            //...
-            response.end();
-        });
-    } else {
-        response.end();
-    }
+    response.end();
 }
 
 function broadcastToEachClient() {
 
 }
 
+// [前提1] クライアントは2接続
 function init() {
     console.log('game server started.');
     var plainServer = http.createServer(onRequest).listen(ServerPort, ServerHost);
@@ -70,7 +42,22 @@ function init() {
         }
 
         ws_connection.on('message', function (message) {
-            //console.log('connection.message: ' + message.utf8Data);
+            console.log('connection.message: ' + message.utf8Data);
+            var data = message.utf8Data; // [前提] body は json
+
+            if (ws_connections.length != 2) {
+                console.log('count of client is not 2.');
+                return;
+            }
+            var json = JSON.parse(data);
+            // 位置情報、終了かどうかの受取り
+            console.log(json);
+
+            // ターンのスイッチ
+            activeTurnIndex = (activeTurnIndex + 1) % 2;
+
+            // 全クライアントに位置情報、終了かどうか、ターン情報をブロードキャスト
+            //ws_connection.send("start");            
         });
         ws_connection.on('close', function (reasonCode, description) {
             console.log('connection.close');
